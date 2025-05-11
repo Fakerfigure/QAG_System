@@ -1,6 +1,6 @@
 ## 相关prompt
 ### 大模型生成QA的prompt
-```markdown
+````markdown
 # Role Definition  
 You are a QAG (Question Answer Generation) expert skilled in transforming academic papers into QA pairs  
 
@@ -44,4 +44,4 @@ Step 3. Strictly follow the output format and only output QA pairs
 ```markdown
 {paper_content}
 ```
-```
+````
