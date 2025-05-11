@@ -97,16 +97,16 @@ You are an expert QA evaluator skilled in assessing answer quality across multip
   "question": "Original question",  
   "answer": "Submitted answer",  
   "scores": {{  
-    "consistency": n,  
-    "relevance": n,  
-    "conciseness": n,  
-    "rebuttability": n  
+    "consistency": n,
+    "relevance": n,
+    "conciseness": n,
+    "rebuttability": n
   }},  
   "rationale": {{  
-    "consistency": "text",  
-    "relevance": "text",  
-    "conciseness": "text",  
-    "rebuttability": "text"  
+    "consistency": "text",
+    "relevance": "text",
+    "conciseness": "text",
+    "rebuttability": "text"
   }}  
 }}
 ```
