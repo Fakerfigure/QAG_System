@@ -58,7 +58,7 @@ if "file_data" not in st.session_state:
             "向量库路径",
             "实体数量", 
             "实体",
-            "QA_result"
+            "QA_result",
             "Chunks地址"
             ])
 
@@ -613,6 +613,66 @@ with colE:
             else:
                     status.success("✅ 所有文件嵌入完成！")
             st.rerun()
+# with colF:
+#     if st.button("删除", use_container_width=True):
+#         selection = st.session_state.get("data", {}).get("selection", {})
+#         selected_rows = selection.get("rows", [])
+#         if not selected_rows:
+#             st.warning("请先选择要删除的文件")
+#         else:
+#             # 逆序删除避免索引错位
+#             for row_idx in sorted(selected_rows, reverse=True):
+#                 # 删除PDF文件
+#                 pdf_path = st.session_state.file_data.at[row_idx, "存储路径"]
+#                 try:
+#                     os.remove(pdf_path)
+#                 except Exception as e:
+#                     st.error(f"删除PDF文件 {pdf_path} 失败: {e}")
+                
+#                 # 删除Markdown文件
+#                 md_path = st.session_state.file_data.at[row_idx, "md路径"]
+#                 if md_path:  # 确保路径存在
+#                     try:
+#                         os.remove(md_path)
+#                     except FileNotFoundError:
+#                         st.warning(f"Markdown文件 {md_path} 不存在")
+#                     except Exception as e:
+#                         st.error(f"删除Markdown文件 {md_path} 失败: {e}")
+#                 # 删除向量库
+#                 vector_db_path = st.session_state.file_data.at[row_idx, "向量库路径"]
+#                 if vector_db_path:  # 确保路径存在
+#                     try:
+#                         shutil.rmtree(vector_db_path)
+#                     except FileNotFoundError:
+#                         st.warning(f"向量库 {vector_db_path} 不存在")
+#                     except Exception as e:
+#                         st.error(f"删除向量库 {vector_db_path} 失败: {e}")
+
+#                 chunks_txt_path = st.session_state.file_data.at[row_idx, "Chunks地址"]
+#                 if chunks_txt_path: 
+#                     try:
+#                         os.remove(chunks_txt_path)
+#                     except FileNotFoundError:
+#                         st.warning(f"Chunks地址 {chunks_txt_path} 不存在")
+#                     except Exception as e:
+#                         st.error(f"删除Chunks地址 {chunks_txt_path} 失败: {e}")
+
+#                 # 从session_state中移除记录
+#                 st.session_state.file_data = st.session_state.file_data.drop(row_idx)
+            
+#             # 重置索引并更新JSONL
+#             st.session_state.file_data = st.session_state.file_data.reset_index(drop=True)
+            
+#             # 重写JSONL文件
+#             with open(JSONL_PATH, "w") as f:
+#                 for _, row in st.session_state.file_data.iterrows():
+#                     json.dump(row.to_dict(), f, ensure_ascii=False)
+#                     f.write("\n")
+            
+#             st.success("选中的文件及关联文件已删除")
+#             st.rerun()  # 重新加载页面更新显示
+
+
 with colF:
     if st.button("删除", use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})
@@ -620,6 +680,9 @@ with colF:
         if not selected_rows:
             st.warning("请先选择要删除的文件")
         else:
+            # 检查是否是最后一个数据
+            is_last_record = len(st.session_state.file_data) == len(selected_rows)
+            
             # 逆序删除避免索引错位
             for row_idx in sorted(selected_rows, reverse=True):
                 # 删除PDF文件
@@ -663,19 +726,27 @@ with colF:
             # 重置索引并更新JSONL
             st.session_state.file_data = st.session_state.file_data.reset_index(drop=True)
             
-            # 重写JSONL文件
-            with open(JSONL_PATH, "w") as f:
-                for _, row in st.session_state.file_data.iterrows():
-                    json.dump(row.to_dict(), f, ensure_ascii=False)
-                    f.write("\n")
+            # 如果是最后一个记录，完全删除JSONL文件
+            if is_last_record:
+                try:
+                    os.remove(JSONL_PATH)
+                    st.success("所有文件已删除，元数据文件已清除")
+                except Exception as e:
+                    st.error(f"删除元数据文件失败: {e}")
+            else:
+                # 重写JSONL文件
+                with open(JSONL_PATH, "w") as f:
+                    for _, row in st.session_state.file_data.iterrows():
+                        json.dump(row.to_dict(), f, ensure_ascii=False)
+                        f.write("\n")
+                st.success("选中的文件及关联文件已删除")
             
-            st.success("选中的文件及关联文件已删除")
             st.rerun()  # 重新加载页面更新显示
+
 
 display_columns = ["标题", "上传时间", "大小", "状态", "存储路径", "md路径","向量库路径","实体数量","实体"]
 # 在显示表格前添加
-st.session_state.file_data["实体"] = st.session_state.file_data["实体"].apply(
-    lambda x: x if isinstance(x, list) else [])
+st.session_state.file_data["实体"] = st.session_state.file_data["实体"].apply(lambda x: x if isinstance(x, list) else [])
 pdftable = st.dataframe(
     st.session_state.file_data[display_columns],
     key="data",
