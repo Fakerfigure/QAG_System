@@ -613,66 +613,6 @@ with colE:
             else:
                     status.success("✅ 所有文件嵌入完成！")
             st.rerun()
-# with colF:
-#     if st.button("删除", use_container_width=True):
-#         selection = st.session_state.get("data", {}).get("selection", {})
-#         selected_rows = selection.get("rows", [])
-#         if not selected_rows:
-#             st.warning("请先选择要删除的文件")
-#         else:
-#             # 逆序删除避免索引错位
-#             for row_idx in sorted(selected_rows, reverse=True):
-#                 # 删除PDF文件
-#                 pdf_path = st.session_state.file_data.at[row_idx, "存储路径"]
-#                 try:
-#                     os.remove(pdf_path)
-#                 except Exception as e:
-#                     st.error(f"删除PDF文件 {pdf_path} 失败: {e}")
-                
-#                 # 删除Markdown文件
-#                 md_path = st.session_state.file_data.at[row_idx, "md路径"]
-#                 if md_path:  # 确保路径存在
-#                     try:
-#                         os.remove(md_path)
-#                     except FileNotFoundError:
-#                         st.warning(f"Markdown文件 {md_path} 不存在")
-#                     except Exception as e:
-#                         st.error(f"删除Markdown文件 {md_path} 失败: {e}")
-#                 # 删除向量库
-#                 vector_db_path = st.session_state.file_data.at[row_idx, "向量库路径"]
-#                 if vector_db_path:  # 确保路径存在
-#                     try:
-#                         shutil.rmtree(vector_db_path)
-#                     except FileNotFoundError:
-#                         st.warning(f"向量库 {vector_db_path} 不存在")
-#                     except Exception as e:
-#                         st.error(f"删除向量库 {vector_db_path} 失败: {e}")
-
-#                 chunks_txt_path = st.session_state.file_data.at[row_idx, "Chunks地址"]
-#                 if chunks_txt_path: 
-#                     try:
-#                         os.remove(chunks_txt_path)
-#                     except FileNotFoundError:
-#                         st.warning(f"Chunks地址 {chunks_txt_path} 不存在")
-#                     except Exception as e:
-#                         st.error(f"删除Chunks地址 {chunks_txt_path} 失败: {e}")
-
-#                 # 从session_state中移除记录
-#                 st.session_state.file_data = st.session_state.file_data.drop(row_idx)
-            
-#             # 重置索引并更新JSONL
-#             st.session_state.file_data = st.session_state.file_data.reset_index(drop=True)
-            
-#             # 重写JSONL文件
-#             with open(JSONL_PATH, "w") as f:
-#                 for _, row in st.session_state.file_data.iterrows():
-#                     json.dump(row.to_dict(), f, ensure_ascii=False)
-#                     f.write("\n")
-            
-#             st.success("选中的文件及关联文件已删除")
-#             st.rerun()  # 重新加载页面更新显示
-
-
 with colF:
     if st.button("删除", use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})

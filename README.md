@@ -35,7 +35,7 @@
 
 ```bash
     conda create -n QAG_System python=3.10
-    codna activate QAG_System 
+    conda activate QAG_System 
 ```
 
 #### [MinerU](https://github.com/opendatalab/MinerU)安装
