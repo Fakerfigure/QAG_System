@@ -39,7 +39,7 @@
 ```
 
 #### [MinerU](https://github.com/opendatalab/MinerU)模型下载
-本项目需要用到该项目[MinerU](https://github.com/opendatalab/MinerU)的模型。
+本项目需要用到项目[MinerU](https://github.com/opendatalab/MinerU)的模型。
 ```bash
 pip install modelscope
 wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/scripts/download_models.py -O download_models.py
