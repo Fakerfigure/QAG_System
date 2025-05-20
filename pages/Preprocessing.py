@@ -36,7 +36,7 @@ st.divider()
 os.makedirs("PDF", exist_ok=True)
 os.makedirs("Markdown", exist_ok=True)  # 新增Markdown存储目录
 JSONL_PATH = "Jsonfile/metadata.jsonl"
-
+Config_Path = "Jsonfile/em_model_config.json"
 # 初始化session_state（从JSONL加载历史数据）
 if "file_data" not in st.session_state:
     if os.path.exists(JSONL_PATH):
@@ -577,9 +577,11 @@ with colE:
                     st.session_state.file_data.at[row_idx, "Chunks地址"] = chunks_json_path
                     
                     # 创建向量库
+                    with open(Config_Path, 'r') as f:
+                        em_config = json.load(f)
                     Chroma.from_documents(
                         documents=chunks,
-                        embedding=HuggingFaceEmbeddings(model_name="/home/binbin/deeplearning/MinerU/bge-m3"),
+                        embedding=HuggingFaceEmbeddings(model_name=em_config["model_paths"]["embedding_model"]),
                         persist_directory=vector_db_path
                     )
                     
