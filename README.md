@@ -38,16 +38,12 @@
     conda activate QAG_System 
 ```
 
-#### [MinerU](https://github.com/opendatalab/MinerU)安装
-
-本项目在预处理的PDF转Markdown环境整合MinerU,因此请移步[MinerU](https://github.com/opendatalab/MinerU)， 先完成MinierU的安装,切记在同一个虚拟环境下。
+#### [MinerU](https://github.com/opendatalab/MinerU)模型下载
+本项目需要用到该项目[MinerU](https://github.com/opendatalab/MinerU)的模型。
 ```bash
-git clone https://github.com/opendatalab/MinerU.git
-cd MinerU
 pip install modelscope
 wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/scripts/download_models.py -O download_models.py
 python download_models.py
-cd ..
 ```
 
 #### 安装依赖
@@ -59,11 +55,11 @@ cd ..
 #### 模型下载
 
 ```bash
-    modelscope download --model BAAI/bge-m3 --local_dir ./dir
-    modelscope download --model BAAI/bge-reranker-large --local_dir ./dir
+    modelscope download --model BAAI/bge-m3 --local_dir ./dir(BAAI/bge-m3路径)
+    modelscope download --model BAAI/bge-reranker-large --local_dir ./dir(BAAI/bge-m3路径)
 ```
 
-下载好模型后，需要手动将模型文件添加在 `Jsonfile/em_model_config.json` 中，假设路径为`bin/QAG_System/modelscope/BAAI/bge-m3`,则文件修改为：
+下载好模型后，需要手动将模型文件路径添加在 `Jsonfile/em_model_config.json` 中，假设BAAI/bge-m3路径为`bin/QAG_System/modelscope/BAAI/bge-m3`,则文件修改为：
 
 ```json
     {
