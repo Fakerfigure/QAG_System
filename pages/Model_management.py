@@ -44,7 +44,7 @@ def config_page():
         with colB:
             if st.form_submit_button("恢复默认"):
                 default_config = {
-                    "api_key": "sk-c577fd2f34ed4a828b5d6ce320c8fdde",
+                    "api_key": "",
                     "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
                     "model": "qwen-plus",
                     "temperature": 0.3
