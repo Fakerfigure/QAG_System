@@ -577,9 +577,16 @@ with colE:
                     st.session_state.file_data.at[row_idx, "Chunks地址"] = chunks_json_path
                     
                     # 创建向量库
-                    Chroma.from_documents(
+                    # Chroma.from_documents(
+                    #     documents=chunks,
+                    #     embedding=HuggingFaceEmbeddings(model_name="/home/binbin/deeplearning/MinerU/bge-m3"),
+                    #     persist_directory=vector_db_path
+                    # )
+                    with open("Jsonfile/em_model_config.json", 'r') as f:
+                        em_config = json.load(f)
+                        Chroma.from_documents(
                         documents=chunks,
-                        embedding=HuggingFaceEmbeddings(model_name="/home/binbin/deeplearning/MinerU/bge-m3"),
+                        embedding=HuggingFaceEmbeddings(model_name=em_config["model_paths"]["embedding_model"]),
                         persist_directory=vector_db_path
                     )
                     
