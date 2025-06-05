@@ -40,7 +40,12 @@
 
 #### [MinerU](https://github.com/opendatalab/MinerU)安装
 
-本项目在预处理的PDF转Markdown环境整合MinerU,因此请移步[MinerU](https://github.com/opendatalab/MinerU)， 先完成MinierU的安装,切记在同一个虚拟环境下。
+本项目需要用到项目[MinerU](https://github.com/opendatalab/MinerU)的模型。
+```bash
+pip install modelscope
+wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/scripts/download_models.py -O download_models.py
+python download_models.py
+```
 
 #### 安装依赖
 
