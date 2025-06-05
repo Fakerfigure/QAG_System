@@ -1,4 +1,4 @@
-![Relavance Score](eval/relavance&completeness&accuracy/fig/Relavance Score.png)
-![Completeness Score](eval/relavance&completeness&accuracy/fig/Completeness Score.png)
-![Accuracy Score](eval/relavance&completeness&accuracy/fig/Accuracy Score.png)
+![Relavance Score](fig/Relavance Score.png)
+![Completeness Score](fig/Completeness Score.png)
+![Accuracy Score](fig/Accuracy Score.png)
 
