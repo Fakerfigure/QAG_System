@@ -1,6 +1,6 @@
-![Relavance Score](./fig/Relavance Score.png)
+![Relavance Score](fig/Relavance%20Score.png)
 
-![Completeness Score](./fig/Completeness Score.png)
+![Completeness Score](fig/Completeness%20Score.png)
 
-![Accuracy Score](./fig/Accuracy Score.png)
+![Accuracy Score](fig/Accuracy%20Score.png)
 
