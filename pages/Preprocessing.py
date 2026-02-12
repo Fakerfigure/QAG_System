@@ -432,7 +432,7 @@ with colC:
                     3. Do not generate any text that is not related to the generation requirements.
                     4. The extracted entities only include academic entities such as concepts and academic terms, and do not include entities that are not related to academics, such as names, dates, and places.
                     Abstract：{abstract}
-                    Instruction：{intro}
+                    Introduction：{intro}
                     Conclusion：{conclusion}
                     
                     """.format(
