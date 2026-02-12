@@ -61,6 +61,14 @@ conda activate QAG_System
 
 ### Install [MinerU](https://github.com/opendatalab/MinerU)
 
+This project requires the [MinerU](https://github.com/opendatalab/MinerU) model.
+
+```bash
+pip install modelscope
+wget https://gcore.jsdelivr.net/gh/opendatalab/MinerU@master/scripts/download_models.py -O download_models.py
+python download_models.py
+```
+
 This project integrates MinerU for PDF-to-Markdown conversion. Please visit [MinerU](https://github.com/opendatalab/MinerU) to complete the installation first, ensuring it's in the same virtual environment.
 
 ### Install Dependencies
