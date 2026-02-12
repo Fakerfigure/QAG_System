@@ -22,14 +22,13 @@ from langchain_experimental.text_splitter import SemanticChunker
 import hashlib
 from core.chatbot import chatbot
 from typing import List, Dict
+from core.i18n import get_text, init_language
 
-st.set_page_config(
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# Initialize language
+init_language()
 
 # 页面标题
-st.subheader("文献处理")
+st.subheader(get_text("doc_title"))
 st.divider()
 
 # 初始化目录和文件
@@ -276,7 +275,7 @@ colA, colB, colC, colD, colE, colF = st.columns(
 )
 
 with colA:
-    uploaded_files = st.file_uploader("选择PDF文件", accept_multiple_files=True, type=["pdf"])
+    uploaded_files = st.file_uploader(get_text("upload_file"), accept_multiple_files=True, type=["pdf"])
     
     for uploaded_file in uploaded_files:
         file_name = uploaded_file.name
@@ -299,7 +298,7 @@ with colA:
                 "标题": file_name,
                 "上传时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "大小": size_display,
-                "状态": "已上传",
+                "\u72b6\u6001": get_text("status_uploaded"),
                 "存储路径": file_path,
                 "md路径": "" , # 新增markdown路径字段
                 "向量库路径":"",
@@ -318,12 +317,12 @@ with colA:
             )
 
 with colB:
-    if st.button("预处理", use_container_width=True):
+    if st.button(get_text("preprocess"), use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})
         selected_rows = selection.get("rows", [])
         
         if not selected_rows:
-            st.warning("请先选择要预处理的文件")
+            st.warning(get_text("msg_select_files"))
         else:
             progress = st.progress(0)
             status = st.empty()
@@ -332,7 +331,7 @@ with colB:
             
             for idx, row_idx in enumerate(selected_rows, 1):
                 file_name = st.session_state.file_data.at[row_idx, "标题"]
-                status.info(f"正在处理 {idx}/{total}: {file_name}")
+                status.info(get_text("msg_processing_count", idx, total, file_name))
                 progress.progress((idx-1)/total)  # 先显示准备状态
                 
                 try:
@@ -360,7 +359,7 @@ with colB:
                         f.write(md_content)
                     
                     # 更新元数据
-                    st.session_state.file_data.at[row_idx, "状态"] = "已转换"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_converted")
                     st.session_state.file_data.at[row_idx, "md路径"] = output_md_path
                     with open(JSONL_PATH, "w") as f:
                         for _, row in st.session_state.file_data.iterrows():
@@ -368,7 +367,7 @@ with colB:
                             f.write("\n")
                     
                     # 处理完成后更新状态和进度
-                    status.success(f"✅ {idx}/{total}: {file_name} 转换成功")
+                    status.success(get_text("msg_converted_success", idx, total, file_name))
                     progress.progress(idx/total)
                     time.sleep(1.5)
                     
@@ -376,7 +375,7 @@ with colB:
                     error_msg = f"❌ {file_name}: {str(e)}"
                     errors.append(error_msg)
                     status.error(error_msg)
-                    st.session_state.file_data.at[row_idx, "状态"] = "转换失败"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_converted") + " " + get_text("msg_process_failed", "")
                     progress.progress(idx/total)  # 即使失败也要推进进度
                 
                 # 强制界面更新（移除sleep保证实时性）
@@ -386,20 +385,20 @@ with colB:
             # 最终处理
             progress.empty()
             if errors:
-                status.error(f"处理完成，成功 {total-len(errors)} 个，失败 {len(errors)} 个")
-                with st.expander("查看错误详情"):
+                status.error(get_text("msg_complete_with_errors", total-len(errors), len(errors)))
+                with st.expander(get_text("view_error_details")):
                     st.error("\n\n".join(errors))
             else:
-                status.success("✅ 所有文件处理成功！")
+                status.success(get_text("msg_all_convert_success"))
             
             st.rerun()
 
 with colC:
-    if st.button("提取实体", use_container_width=True):
+    if st.button(get_text("extract_entities"), use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})
         selected_rows = selection.get("rows", [])
         if not selected_rows:
-            st.warning("请先选择要抽取实体的文件")
+            st.warning(get_text("msg_select_extract"))
         else:
             progress = st.progress(0)
             status = st.empty()
@@ -414,10 +413,10 @@ with colC:
                     
                     # 检查markdown文件是否存在
                     if not os.path.exists(md_path):
-                        st.warning(f"Markdown文件 {md_path} 不存在，请先预处理！")
+                        st.warning(get_text("msg_md_not_exist", md_path))
                         time.sleep(1.5)
                         
-                    status.info(f"处理 {idx}/{total}: {file_name}")
+                    status.info(get_text("msg_processing_count", idx, total, file_name))
                     progress.progress((idx-1)/total)
                     # 执行内容切分
                     abstract, intro, conclusion = article_split(md_path)
@@ -447,7 +446,7 @@ with colC:
                     
                     # 更新元数据
                     st.session_state.file_data.at[row_idx, "实体"] = entities
-                    st.session_state.file_data.at[row_idx, "状态"] = "已抽取实体"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_extracted")
                     st.session_state.file_data.at[row_idx, "实体数量"] = len(entities)
                     
                     # 重写JSONL文件
@@ -456,13 +455,13 @@ with colC:
                             json.dump(row.to_dict(), f, ensure_ascii=False)
                             f.write("\n")
                             
-                    status.success(f"✅ {idx}/{total}: {file_name} 抽取成功（{len(entities)}个实体）")
+                    status.success(get_text("msg_extracted_success", idx, total, file_name, len(entities)))
                     progress.progress(idx/total)
                     
                 except Exception as e:
                     error_msg = f"❌ {file_name}: {str(e)}"
                     errors.append(error_msg)
-                    st.session_state.file_data.at[row_idx, "状态"] = "抽取失败"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_extracted") + " " + get_text("msg_process_failed", "")
                     st.session_state.file_data.at[row_idx, "实体"] = []
                     progress.progress(idx/total)
                     status.error(error_msg)
@@ -473,18 +472,18 @@ with colC:
             # 最终处理
             progress.empty()
             if errors:
-                status.error(f"处理完成，成功 {total - len(errors)} 个，失败 {len(errors)} 个")
-                with st.expander("错误详情"):
+                status.error(get_text("msg_complete_with_errors", total - len(errors), len(errors)))
+                with st.expander(get_text("view_error_details")):
                     st.error("\n".join(errors))
             else:
-                status.success("✅ 所有文件实体抽取完成！")
+                status.success(get_text("msg_all_extract_success"))
             st.rerun()
 with colD:
-    if st.button("生成问题", use_container_width=True):
+    if st.button(get_text("generate_questions"), use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})
         selected_rows = selection.get("rows", [])
         if not selected_rows:
-            st.warning("请先选择要生成QA的文件")
+            st.warning(get_text("msg_select_generate"))
         else:
             progress = st.progress(0)
             status = st.empty()
@@ -497,10 +496,10 @@ with colD:
                     entities = st.session_state.file_data.at[row_idx, "实体"]
                     
                     if not entities or len(entities) == 0:
-                        raise ValueError("未找到实体，请先抽取实体")
+                        raise ValueError(get_text("msg_no_entity"))
                         time.sleep(2)
                     
-                    status.info(f"处理 {idx}/{total}: {file_name}")
+                    status.info(get_text("msg_processing_count", idx, total, file_name))
                     progress.progress((idx-1)/total)
                     
                     # 生成问题
@@ -511,7 +510,7 @@ with colD:
                     
                     # 更新元数据
                     st.session_state.file_data.at[row_idx, "QA_result"] = qa_list
-                    st.session_state.file_data.at[row_idx, "状态"] = "已生问题"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_questions_generated")
                     
                     # 更新JSONL文件
                     with open(JSONL_PATH, "w", encoding="utf-8") as f:
@@ -519,13 +518,13 @@ with colD:
                             json.dump(row.to_dict(), f, ensure_ascii=False)
                             f.write("\n")
                             
-                    status.success(f"✅ {idx}/{total}: {file_name} 生成成功（{len(questions)}个问题）")
+                    status.success(get_text("msg_generated_success", idx, total, file_name, len(questions)))
                     progress.progress(idx/total)
                     
                 except Exception as e:
                     error_msg = f"❌ {file_name}: {str(e)}"
                     errors.append(error_msg)
-                    st.session_state.file_data.at[row_idx, "状态"] = "Q生成失败"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_questions_generated") + " " + get_text("msg_process_failed", "")
                     progress.progress(idx/total)
                     status.error(error_msg)
                 finally:
@@ -533,20 +532,20 @@ with colD:
                     
             progress.empty()
             if errors:
-                status.error(f"处理完成，成功 {total - len(errors)} 个，失败 {len(errors)} 个")
-                with st.expander("错误详情"):
+                status.error(get_text("msg_complete_with_errors", total - len(errors), len(errors)))
+                with st.expander(get_text("view_error_details")):
                     st.error("\n".join(errors))
             else:
-                status.success("✅ 所有文件QA生成完成!请进入QA管理页面查看")
+                status.success(get_text("msg_all_qa_success"))
                 time.sleep(2)
             st.rerun()
 with colE:
-    if st.button("文本嵌入", use_container_width=True):
+    if st.button(get_text("text_embedding"), use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})
         selected_rows = selection.get("rows", [])
         
         if not selected_rows:
-            st.warning("请先选择要嵌入的文件")
+            st.warning(get_text("msg_select_embed"))
         else:
             progress = st.progress(0)
             status = st.empty()
@@ -560,9 +559,9 @@ with colE:
                     
                     # 检查预处理状态
                     if st.session_state.file_data.at[row_idx, "md路径"] == "":
-                        raise ValueError("请先完成预处理")
+                        raise ValueError(get_text("msg_need_preprocess"))
                     
-                    status.info(f"处理中 {idx}/{total}: {file_name}")
+                    status.info(get_text("msg_processing_count", idx, total, file_name))
                     progress.progress((idx-1)/total)
                     
                     # 生成唯一向量库路径
@@ -591,7 +590,7 @@ with colE:
                     )
                     
                     # 更新元数据
-                    st.session_state.file_data.at[row_idx, "状态"] = "已嵌入"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_embedded")
                     st.session_state.file_data.at[row_idx, "向量库路径"] = vector_db_path
                     
                     # 更新JSONL
@@ -600,13 +599,13 @@ with colE:
                             json.dump(row.to_dict(), f, ensure_ascii=False)
                             f.write("\n")
                             
-                    status.success(f"✅ {idx}/{total}: {file_name} 嵌入成功")
+                    status.success(get_text("msg_embedded_success", idx, total, file_name))
                     progress.progress(idx/total)
                     
                 except Exception as e:
                     error_msg = f"❌ {file_name}: {str(e)}"
                     errors.append(error_msg)
-                    st.session_state.file_data.at[row_idx, "状态"] = "嵌入失败"
+                    st.session_state.file_data.at[row_idx, "状态"] = get_text("status_embedded") + " " + get_text("msg_process_failed", "")
                     progress.progress(idx/total)
                     status.error(error_msg)
                 finally:
@@ -614,18 +613,18 @@ with colE:
                     
             progress.empty()
             if errors:
-                status.error(f"处理完成，成功 {total-len(errors)} 个，失败 {len(errors)} 个")
-                with st.expander("错误详情"):
+                status.error(get_text("msg_complete_with_errors", total-len(errors), len(errors)))
+                with st.expander(get_text("view_error_details")):
                     st.error("\n".join(errors))
             else:
-                    status.success("✅ 所有文件嵌入完成！")
+                    status.success(get_text("msg_all_embed_success"))
             st.rerun()
 with colF:
-    if st.button("删除", use_container_width=True):
+    if st.button(get_text("delete"), use_container_width=True):
         selection = st.session_state.get("data", {}).get("selection", {})
         selected_rows = selection.get("rows", [])
         if not selected_rows:
-            st.warning("请先选择要删除的文件")
+            st.warning(get_text("msg_select_delete"))
         else:
             # 检查是否是最后一个数据
             is_last_record = len(st.session_state.file_data) == len(selected_rows)
@@ -637,7 +636,7 @@ with colF:
                 try:
                     os.remove(pdf_path)
                 except Exception as e:
-                    st.error(f"删除PDF文件 {pdf_path} 失败: {e}")
+                    st.error(get_text("msg_delete_pdf_failed", pdf_path, e))
                 
                 # 删除Markdown文件
                 md_path = st.session_state.file_data.at[row_idx, "md路径"]
@@ -645,27 +644,27 @@ with colF:
                     try:
                         os.remove(md_path)
                     except FileNotFoundError:
-                        st.warning(f"Markdown文件 {md_path} 不存在")
+                        st.warning(get_text("msg_file_not_exist", f"Markdown {md_path}"))
                     except Exception as e:
-                        st.error(f"删除Markdown文件 {md_path} 失败: {e}")
+                        st.error(get_text("msg_delete_md_failed", md_path, e))
                 # 删除向量库
                 vector_db_path = st.session_state.file_data.at[row_idx, "向量库路径"]
                 if vector_db_path:  # 确保路径存在
                     try:
                         shutil.rmtree(vector_db_path)
                     except FileNotFoundError:
-                        st.warning(f"向量库 {vector_db_path} 不存在")
+                        st.warning(get_text("msg_file_not_exist", f"Vector DB {vector_db_path}"))
                     except Exception as e:
-                        st.error(f"删除向量库 {vector_db_path} 失败: {e}")
+                        st.error(get_text("msg_delete_vector_failed", vector_db_path, e))
 
                 chunks_txt_path = st.session_state.file_data.at[row_idx, "Chunks地址"]
                 if chunks_txt_path: 
                     try:
                         os.remove(chunks_txt_path)
                     except FileNotFoundError:
-                        st.warning(f"Chunks地址 {chunks_txt_path} 不存在")
+                        st.warning(get_text("msg_file_not_exist", f"Chunks {chunks_txt_path}"))
                     except Exception as e:
-                        st.error(f"删除Chunks地址 {chunks_txt_path} 失败: {e}")
+                        st.error(get_text("msg_delete_chunks_failed", chunks_txt_path, e))
 
                 # 从session_state中移除记录
                 st.session_state.file_data = st.session_state.file_data.drop(row_idx)
@@ -677,16 +676,16 @@ with colF:
             if is_last_record:
                 try:
                     os.remove(JSONL_PATH)
-                    st.success("所有文件已删除，元数据文件已清除")
+                    st.success(get_text("msg_all_deleted"))
                 except Exception as e:
-                    st.error(f"删除元数据文件失败: {e}")
+                    st.error(get_text("msg_delete_metadata_failed", e))
             else:
                 # 重写JSONL文件
                 with open(JSONL_PATH, "w") as f:
                     for _, row in st.session_state.file_data.iterrows():
                         json.dump(row.to_dict(), f, ensure_ascii=False)
                         f.write("\n")
-                st.success("选中的文件及关联文件已删除")
+                st.success(get_text("msg_deleted"))
             
             st.rerun()  # 重新加载页面更新显示
 
@@ -710,11 +709,11 @@ selected_rows = selection.get("rows", [])
 if selected_rows:
     # 强制单选处理（只取第一个选中的行）
     if len(selected_rows) > 1:
-        st.warning("⚠️ 请选择单个文件进行预览")
+        st.warning(get_text("msg_select_single"))
         selected_rows = [selected_rows[0]]  # 强制取第一个选中项
         st.session_state.data["selection"]["rows"] = selected_rows  # 更新选中状态
 
-    if st.button("预览选中文件"):
+    if st.button(get_text("preview_file")):
         st.session_state.show_preview = True
 
 # 动态响应选择状态变化
@@ -753,7 +752,7 @@ if st.session_state.get("show_preview"):
                     cols = st.columns([0.1, 0.3, 0.1, 0.5])
                     with cols[1]:
                         selected_page = st.number_input(
-                            "页码",
+                            get_text("page_num"),
                             min_value=1,
                             max_value=page_count,
                             value=1,
@@ -772,14 +771,14 @@ if st.session_state.get("show_preview"):
                     cols[3].caption(f"Page {selected_page}/{page_count}")
                     
                     # 页面渲染
-                    with st.spinner("正在渲染..."):
+                    with st.spinner(get_text("rendering")):
                         page = doc.load_page(selected_page-1)
                         pix = page.get_pixmap(dpi=150)  # 提高DPI
                         img_data = pix.tobytes()
                         st.image(img_data, use_container_width =True)
 
                 except Exception as e:
-                    st.error(f"PDF预览失败: {str(e)}")
+                    st.error(get_text("pdf_preview_failed", str(e)))
 
         with col_md:
             st.subheader("Markdown")
@@ -804,22 +803,22 @@ if st.session_state.get("show_preview"):
                 with st.container(height=1025):
 
                     edited = st.text_area(
-                        "编辑内容",
+                        get_text("edit_content"),
                         value=st.session_state.edited_md,
                         height=900,
                         label_visibility="collapsed",
                         key="md_editor"
                     )
                     
-                    if st.button("💾 保存修改"):
+                    if st.button(get_text("save_changes")):
                         try:
                             with open(md_path, "w", encoding="utf-8") as f:
                                 f.write(edited)
                             st.session_state.edited_md = edited
-                            st.success("保存成功！")
+                            st.success(get_text("msg_save_success"))
                             time.sleep(1)
                             st.rerun()
                         except Exception as e:
-                            st.error(f"保存失败: {str(e)}")
+                            st.error(get_text("msg_save_failed", str(e)))
             else:
-                st.warning("Markdown文件未生成")
+                st.warning(get_text("md_not_generated"))

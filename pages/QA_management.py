@@ -13,14 +13,13 @@ from langchain.docstore.document import Document
 import torch
 import re
 from core.chatbot import chatbot
+from core.i18n import get_text, init_language
 
-st.set_page_config(
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# Initialize language
+init_language()
 
 # 页面标题
-st.subheader("QA管理")
+st.subheader(get_text("qa_title"))
 st.divider()
 
 # 初始化目录和文件
@@ -189,11 +188,11 @@ The following knowledge units have undergone rigorous academic validation:
 # 页面操作按钮
 colA, colB, colC = st.columns([0.3, 0.3, 0.3], vertical_alignment="center")
 with colA:
-    generate_btn = st.button("生成答案", help="为选中问题生成答案")
+    generate_btn = st.button(get_text("generate_answers"), help=get_text("generate_answers_help"))
     if generate_btn:
         processed_files = total_processed = 0
         
-        with st.spinner("处理中..."):
+        with st.spinner(get_text("processing")):
             try:
                 for idx, row in st.session_state.file_data.iterrows():
                     df_key = f"qa_df_{idx}"
@@ -204,7 +203,7 @@ with colA:
                     # 加载并转换chunks数据
                     chunks_path = row.get("Chunks地址", "")
                     if not os.path.exists(chunks_path):
-                        st.warning(f"跳过 {row['标题']}: chunks文件不存在")
+                        st.warning(get_text("msg_skip_file", row['标题']))
                         continue
                     
                     with open(chunks_path, "r") as f:
@@ -231,13 +230,13 @@ with colA:
                     processed_files += 1
                     
                 save_to_jsonl()
-                st.success(f"成功处理{processed_files}个文件，生成{total_processed}个答案")
+                st.success(get_text("msg_process_success", processed_files, total_processed))
                 st.rerun()
                 
             except Exception as e:
-                st.error(f"处理失败: {str(e)}")
+                st.error(get_text("msg_process_failed", str(e)))
 with colB:
-    delete_btn = st.button("删除QA", type="secondary", help="删除选中文章的所有QA记录")
+    delete_btn = st.button(get_text("delete_qa"), type="secondary", help=get_text("delete_qa_help"))
     # 删除逻辑处理
     if delete_btn:
         try:
@@ -272,39 +271,39 @@ with colB:
                 # 持久化保存
                 save_to_jsonl()
 
-                st.success(f"成功删除 {deleted_count} 个QA项")
+                st.success(get_text("msg_delete_success", deleted_count))
                 time.sleep(1.5)
                 st.rerun()
             else:
-                st.warning("未选择要删除的QA项")
+                st.warning(get_text("msg_no_qa_selected"))
                 time.sleep(1.5)
                 
         except Exception as e:
-            st.error(f"删除操作失败: {str(e)}")
+            st.error(get_text("msg_delete_failed", str(e)))
             time.sleep(1.5)
             import traceback
             traceback.print_exc()
 with colC: 
-    DBcreate = st.button("创建数据集", type="secondary", help="将选中的QA保存为新的数据集文件")
+    DBcreate = st.button(get_text("create_dataset"), type="secondary", help=get_text("create_dataset_help"))
     if DBcreate:
         st.session_state.show_dataset_dialog = True  # 触发显示对话框
 
     # 处理数据集创建对话框
     if st.session_state.get("show_dataset_dialog"):
         with st.form(key="dataset_creation_form"):
-            dataset_name = st.text_input("数据集名称（无需后缀）", key="dataset_name", 
-                                       help="请输入英文名称，不要包含特殊字符")
+            dataset_name = st.text_input(get_text("dataset_name"), key="dataset_name", 
+                                       help=get_text("dataset_name_help"))
                     # 使用列来横向排列按钮
             col1, col2 = st.columns([1, 3])  # 调整比例为1:3使按钮靠左
             with col1:
-                submit = st.form_submit_button("创建")
+                submit = st.form_submit_button(get_text("create"))
             with col2:
-                cancel = st.form_submit_button("取消")
+                cancel = st.form_submit_button(get_text("cancel"))
             # submit = st.form_submit_button("创建")
             # cancel = st.form_submit_button("取消")
             if submit:
                 if not dataset_name.strip():
-                    st.error("数据集名称不能为空!")
+                    st.error(get_text("msg_dataset_name_empty"))
                 else:
                     # 收集所有选中的QA项
                     selected_entries = []
@@ -322,7 +321,7 @@ with colC:
                                     })
                     
                     if not selected_entries:
-                        st.error("请至少选择一个QA项!")
+                        st.error(get_text("msg_select_qa"))
                     else:
                         # 创建保存目录
                         save_dir = Path("DataBase_manage")
@@ -338,12 +337,12 @@ with colC:
                                 for entry in selected_entries:
                                     json_line = json.dumps(entry, ensure_ascii=False)
                                     f.write(json_line + "\n")
-                            st.success(f"数据集已创建: {file_path}")
+                            st.success(get_text("msg_dataset_created", file_path))
                             time.sleep(1.5)
                             del st.session_state.show_dataset_dialog
                             st.rerun()
                         except Exception as e:
-                            st.error(f"保存失败: {str(e)}")
+                            st.error(get_text("msg_save_failed", str(e)))
 
             if cancel:
                 del st.session_state.show_dataset_dialog
@@ -352,14 +351,14 @@ with colC:
 
 # 展示所有文章的QA数据
 for idx, row in st.session_state.file_data.iterrows():
-    with st.expander(f"📄 {row['标题']} - QA数量: {len(row['QA_result'])}", expanded=True):
+    with st.expander(get_text("qa_count", row['标题'], len(row['QA_result'])), expanded=True):
         if not row.get("QA_result"):
-            st.info("该文章尚未生成QA内容")
+            st.info(get_text("no_qa_content"))
             continue
             
         # 转换为交互式DataFrame
         qa_df = pd.DataFrame(row["QA_result"])[["question", "answer", "reference"]]
-        qa_df.columns = ["问题", "答案", "参考文献"]
+        qa_df.columns = [get_text("col_question"), get_text("col_answer"), get_text("col_reference")]
         
         # 创建唯一键值
         df_key = f"qa_df_{idx}"
@@ -373,9 +372,9 @@ for idx, row in st.session_state.file_data.iterrows():
             selection_mode="multi-row",
             hide_index=True,
             column_config={
-                "问题": {"width": "40%"},
-                "答案": {"width": "40%"},
-                "参考文献": {"width": "20%"}
+                get_text("col_question"): {"width": "40%"},
+                get_text("col_answer"): {"width": "40%"},
+                get_text("col_reference"): {"width": "20%"}
             }
         )
         # 添加编辑功能
@@ -390,7 +389,7 @@ for idx, row in st.session_state.file_data.iterrows():
             if len(selected_rows) == 1:
                 edit_col, _ = st.columns([0.2, 0.8])
                 with edit_col:
-                    if st.button("双击编辑选中QA", key=f"edit_btn_{idx}"):
+                    if st.button(get_text("edit_qa"), key=f"edit_btn_{idx}"):
                         st.session_state.editing = {
                             "article_idx": idx,
                             "qa_idx": selected_rows[0],
@@ -407,7 +406,7 @@ for idx, row in st.session_state.file_data.iterrows():
                 # 创建两列布局
 
                 new_question = st.text_area(
-                        "问题编辑",
+                        get_text("edit_question"),
                         value=st.session_state.editing["original_question"],
                         height=90,
                         key=f"question_edit_{idx}"
@@ -416,7 +415,7 @@ for idx, row in st.session_state.file_data.iterrows():
 
                 with col1:
                     new_answer = st.text_area(
-                        "答案编辑", 
+                        get_text("edit_answer"), 
                         value=st.session_state.editing["original_answer"],
                         height=300,
                         key=f"answer_edit_{idx}"
@@ -424,7 +423,7 @@ for idx, row in st.session_state.file_data.iterrows():
 
                 with col2:
                     st.text_area(
-                        "参考文献",
+                        get_text("col_reference"),
                         value=current_qa["reference"],
                         height=300,
                         disabled=True,
@@ -435,7 +434,7 @@ for idx, row in st.session_state.file_data.iterrows():
                 # 按钮布局
                 btn_col1, btn_col2,_,_,_ = st.columns([0.2, 0.2,0.2,0.2,0.2])
                 with btn_col1:
-                    save_btn = st.form_submit_button("💾 保存修改")
+                    save_btn = st.form_submit_button(get_text("save_changes"))
                 with btn_col2:
                     cancel_btn = st.form_submit_button("✕")
 
@@ -449,7 +448,7 @@ for idx, row in st.session_state.file_data.iterrows():
                     st.session_state.file_data.at[idx, "QA_result"] = updated_qa
                     save_to_jsonl()  # 保存到文件
                     del st.session_state.editing  # 退出编辑模式
-                    st.success("修改已保存！")
+                    st.success(get_text("msg_changes_saved"))
                     time.sleep(1)
                     st.rerun()
 

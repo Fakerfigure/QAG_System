@@ -4,14 +4,13 @@ import json
 import os
 import time
 from pathlib import Path
+from core.i18n import get_text, init_language
 
-st.set_page_config(
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# Initialize language
+init_language()
 
 # 页面标题
-st.subheader("数据集管理")
+st.subheader(get_text("dataset_title"))
 st.divider()
 
 # 初始化session状态
@@ -44,7 +43,7 @@ def load_datasets():
             # 转换旧格式兼容
             for entry in data:
                 if "标题" not in entry:
-                    entry["标题"] = entry.get("source", "未知文档")
+                    entry["标题"] = entry.get("source", get_text("unknown_document"))
                 
             df = pd.DataFrame(data)
             
@@ -55,22 +54,22 @@ def load_datasets():
                 "last_modified": file.stat().st_mtime
             }
         except Exception as e:
-            st.error(f"加载数据集 {file.name} 失败: {str(e)}")
+            st.error(get_text("msg_load_failed", file.name, str(e)))
 
 # 首次加载数据
 load_datasets()
 
 with st.sidebar:
-    if st.button("📤 打开导出配置", help="配置数据集导出选项"):
+    if st.button(get_text("export_config"), help=get_text("delete_selected_help")):
         st.session_state.show_export = not st.session_state.show_export
     
     if st.session_state.show_export:
         with st.form("export_sidebar_config"):
-            st.markdown("### 导出配置")
+            st.markdown(get_text("export_config_title"))
             
             # 文件格式选择
             file_format = st.selectbox(
-                "文件格式", 
+                get_text("file_format"), 
                 ["JSON", "JSONL", "CSV"],
                 index=0,
                 key="export_format"
@@ -78,7 +77,7 @@ with st.sidebar:
             
             # 系统提示词输入
             system_prompt = st.text_input(
-                "系统提示词",
+                get_text("system_prompt"),
                 value="",
                 key="system_prompt"
             )
@@ -89,21 +88,21 @@ with st.sidebar:
             #     st.checkbox("包含思维链", value=False, key="export_chain")
             
             # 格式示例
-            st.markdown("​**​格式示例(Alpaca)​**​")
+            st.markdown(get_text("format_example"))
             example_data = {
-                "instruction": "人类指令（必填）",
-                "input": "人类输入（选填）",
-                "output": "模型回答（必填）",
-                "system": "系统提示词（选填）"
+                "instruction": get_text("instruction_required"),
+                "input": get_text("input_optional"),
+                "output": get_text("output_required"),
+                "system": get_text("system_optional")
             }
             st.json(example_data)
             
             # 操作按钮
             col1, col2 = st.columns([1, 2])
             with col1:
-                export_submit = st.form_submit_button("确认")
+                export_submit = st.form_submit_button(get_text("confirm"))
             with col2:
-                if st.form_submit_button("取消"):
+                if st.form_submit_button(get_text("cancel")):
                     st.session_state.show_export = False
                     st.rerun()
             
@@ -131,7 +130,7 @@ with st.sidebar:
                         export_data.append(export_entry)
                 
                 if not export_data:
-                    st.error("请至少选择一条要导出的数据！")
+                    st.error(get_text("msg_select_export"))
                 else:
                     # 生成文件内容
                     try:
@@ -153,38 +152,38 @@ with st.sidebar:
                         st.session_state.export_mime = mime_type
                         
                     except Exception as e:
-                        st.error(f"导出失败: {str(e)}")
+                        st.error(get_text("msg_export_failed", str(e)))
 def show_export_dialog():
     """显示导出配置对话框"""
     with st.form("export_config"):
-        st.markdown("### 导出配置")
+        st.markdown(get_text("export_config_title"))
         
         # 文件格式选择
         file_format = st.selectbox(
-            "文件格式", 
+            get_text("file_format"), 
             ["JSON", "JSONL", "CSV"],
             key="export_format"
         )
         
         # 系统提示词输入
         system_prompt = st.text_input(
-            "系统提示词",
+            get_text("system_prompt"),
             value="",
             key="system_prompt"
         )
         
         # 格式示例展示
-        st.markdown("​**​格式示例​**​")
+        st.markdown(get_text("format_example"))
         example_data = {
-            "instruction": "人类指令（必填）",
+            "instruction": get_text("instruction_required"),
             "input": "",
-            "output": "模型回答（必填）",
-            "system": f"{system_prompt}(选填)"
+            "output": get_text("output_required"),
+            "system": f"{system_prompt}({get_text('system_optional').split('(')[1]}"
         }
         st.json(example_data)
         
         # 操作按钮
-        if st.form_submit_button("确认导出"):
+        if st.form_submit_button(get_text("confirm_export")):
             # 处理导出数据
             export_data = []
             for dataset_name, dataset_info in st.session_state.dataset_data.items():
@@ -205,7 +204,7 @@ def show_export_dialog():
                     })
             
             if not export_data:
-                st.error("请至少选择一条要导出的数据！")
+                st.error(get_text("msg_select_export"))
                 return
             
             # 生成文件内容
@@ -228,9 +227,9 @@ def show_export_dialog():
                 st.session_state.export_filename = f"dataset_export_{time.strftime('%Y%m%d-%H%M%S')}.{file_format.lower()}"
                 
             except Exception as e:
-                st.error(f"导出失败: {str(e)}")
+                st.error(get_text("msg_export_failed", str(e)))
         
-        if st.form_submit_button("取消"):
+        if st.form_submit_button(get_text("cancel")):
             st.session_state.show_export = False
             st.rerun()
 
@@ -257,7 +256,7 @@ def process_export(file_format, system_prompt):
             })
     
     if not export_data:
-        st.error("请至少选择一条要导出的数据！")
+        st.error(get_text("msg_select_export"))
         return
     
     # 生成文件内容
@@ -274,7 +273,7 @@ def process_export(file_format, system_prompt):
             content = df.to_csv(index=False)
             mime_type = "text/csv"
         else:
-            raise ValueError("不支持的导出格式")
+            raise ValueError(get_text("msg_export_failed", "unsupported format"))
         
         # 生成时间戳文件名
         timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -282,7 +281,7 @@ def process_export(file_format, system_prompt):
         
         # 提供下载
         st.download_button(
-            label="下载导出文件",
+            label=get_text("download_export"),
             data=content,
             file_name=filename,
             mime=mime_type,
@@ -294,13 +293,13 @@ def process_export(file_format, system_prompt):
         st.rerun()
         
     except Exception as e:
-        st.error(f"导出失败: {str(e)}")
+        st.error(get_text("msg_export_failed", str(e)))
 
 if st.session_state.dataset_data:
     # 在标题下方创建操作按钮区域
     header_col1, header_col2 = st.columns([0.2, 0.8])
     with header_col1:
-        if st.button("删除所有选中项", help="注意：全选数据集将删除整个文件"):
+        if st.button(get_text("delete_selected"), help=get_text("delete_selected_help")):
             # 遍历所有数据集处理删除
             need_refresh = False
             
@@ -321,7 +320,7 @@ if st.session_state.dataset_data:
                         # 删除整个数据集
                         os.remove(file_path)
                         del st.session_state.dataset_data[dataset_name]
-                        st.success(f"数据集 {dataset_name} 已永久删除")
+                        st.success(get_text("msg_dataset_deleted", dataset_name))
                     else:
                         # 删除选中QA项
                         new_data = [
@@ -337,24 +336,24 @@ if st.session_state.dataset_data:
                         
                         # 更新session状态
                         st.session_state.dataset_data[dataset_name]["dataframe"] = pd.DataFrame(new_data)
-                        st.success(f"在 {dataset_name} 中删除 {len(selected_rows)} 个QA项")
+                        st.success(get_text("msg_qa_deleted", dataset_name, len(selected_rows)))
                     
                     need_refresh = True
                     
                 except Exception as e:
-                    st.error(f"操作失败[{dataset_name}]: {str(e)}")
+                    st.error(get_text("msg_operation_failed", dataset_name, str(e)))
             
             if need_refresh:
                 time.sleep(1)
                 st.rerun()
             else:
-                st.warning("没有选中任何需要删除的内容")
+                st.warning(get_text("msg_no_selection"))
 
     with header_col2:
         # 显示下载按钮（当有导出内容时）
         if 'export_content' in st.session_state:
             st.download_button(
-                label="⬇️ 下载数据集",
+                label=get_text("download_dataset"),
                 data=st.session_state.export_content,
                 file_name=st.session_state.export_filename,
                 mime=st.session_state.export_mime,
@@ -362,18 +361,18 @@ if st.session_state.dataset_data:
                 on_click=lambda: st.session_state.pop('export_content')
             )
         else:
-            if st.button("📤 导出数据集", key="header_export_btn"):
+            if st.button(get_text("export_dataset"), key="header_export_btn"):
                 st.session_state.show_export = True
 
 # 显示所有数据集
 if not st.session_state.dataset_data:
-    st.info("当前没有数据集，请使用QA管理页面创建新数据集")
+    st.info(get_text("no_dataset"))
 else:
     for dataset_name, dataset_info in list(st.session_state.dataset_data.items()):
         df = dataset_info["dataframe"]
         file_path = dataset_info["path"]
         
-        with st.expander(f"📚 {dataset_name} - 包含 {len(df)} 个QA对", expanded=True):
+        with st.expander(get_text("dataset_contains", dataset_name, len(df)), expanded=True):
             # 显示元数据
             
             # 交互式表格
@@ -381,9 +380,9 @@ else:
             selection = st.dataframe(
                 df[["标题", "question", "answer"]],  # 显示关键字段
                 column_config={
-                    "标题": "来源文档",
-                    "question": "问题",
-                    "answer": "答案"
+                    "标题": get_text("source_document"),
+                    "question": get_text("col_question"),
+                    "answer": get_text("col_answer")
                 },
                 use_container_width=True,
                 key=df_key,

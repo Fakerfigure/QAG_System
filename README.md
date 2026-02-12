@@ -1,261 +1,206 @@
-![QAG_System](images/QAG_System.png)   
+<div align="center">
 
-[QAG_System](https://github.com/Fakerfigure/QAG_System)是一个基于检索增强生成(RAG)技术的自动化问答数据集生成框架，专注于将科学论文转换成QA对，旨在为大型语言模型(LLM)训练提供高效、合规的高质量数据源。  
+![QAG_System](images/QAG_System.png)
 
-### 项目架构
+**English** | [中文](README_CN.md)
 
-![项目架构](images/qag_system.png)
+</div>
 
-整个系统的功能框架和文件结如上图所示，我们将论文到QA的工作过程分为三个关键环节：
+# QAG_System
 
-- 文献处理：该环节主要完成文件的上传与解析，对文件进行预处理例如PDF转markdown、提取标题、摘要、介绍、结论等，并将处理后的文件存储到指定目录，此外该环节需要利用大模型提取实体并产生问题。  
-- QA管理：该环节主要完成基于Mini_RAG的答案生成,QA管理与编辑，以及完成初步的数据集创建。
-- 数据集管理：该环节主要完成数据集的管理与编辑，数据集的导出与下载。
-- 模型管理：该环节主要完成模型的API配置，模型参数调整以及模型测试。
+[QAG_System](https://github.com/Fakerfigure/QAG_System) is an automated Question-Answer dataset generation framework based on Retrieval-Augmented Generation (RAG) technology. It specializes in converting scientific papers into QA pairs, aiming to provide efficient, compliant, and high-quality data sources for Large Language Model (LLM) training.
 
-### 核心技术-Mini_RAG
+## Table of Contents
 
-![Mini_RAG](images/miniRAG.png)  
+- [Architecture](#architecture)
+- [Core Technology - Mini_RAG](#core-technology---mini_rag)
+- [Quick Start](#quick-start)
+- [Page Guide](#page-guide)
+- [Evaluation](#evaluation)
 
-本项目为每个QAG任务创建了单独的RAG系统，可以在保证系统高效的同时便于管理不同的向量库，Mini_RAG具体的工作流程如下：  
-首先，从文档（.md 格式）中提取摘要、指令和结论等关键部分，并通过 LLM 抽取实体，生成实体列表。接着，利用 WH Prompt 和 LLM 生成与实体相关的问题集合。在检索阶段，结合向量数据库和混合检索器（mini_RAG），使用 BGE-M3 向量检索和 BM25 关键词检索的混合策略，对问题进行检索并排序，最终生成高质量的问答对。
+## Architecture
 
-### 快速开始
+![Architecture](images/qag_system.png)
 
-⚠️ 注意：本项目依赖GPU加速，流畅运行本项目至少需要**8G**显存！！
+The system workflow from paper to QA consists of four key stages:
 
-#### 拉取代码
+- **Document Processing**: File upload and parsing, preprocessing (PDF to Markdown), extraction of title, abstract, introduction, and conclusion. This stage also involves entity extraction and question generation using LLM.
+- **QA Management**: Answer generation based on Mini_RAG, QA management and editing, and preliminary dataset creation.
+- **Dataset Management**: Dataset management, editing, export, and download.
+- **Model Management**: API configuration, model parameter adjustment, and model testing.
 
-```bash
-    git clone https://github.com/Fakerfigure/QAG_System.git
-    cd QAG_System
-```
+## Core Technology - Mini_RAG
 
-#### Conda虚拟环境（可选）
+![Mini_RAG](images/miniRAG.png)
 
-```bash
-    conda create -n QAG_System python=3.10
-    conda activate QAG_System 
-```
+This project creates a separate RAG system for each QAG task, ensuring system efficiency while facilitating management of different vector databases. The Mini_RAG workflow is as follows:
 
-#### [MinerU](https://github.com/opendatalab/MinerU)安装
+1. Extract key sections (abstract, introduction, conclusion) from documents (.md format)
+2. Use LLM to extract entities and generate entity lists
+3. Generate entity-related question sets using WH Prompt and LLM
+4. In the retrieval stage, combine vector database with hybrid retriever (Mini_RAG), using BGE-M3 vector retrieval and BM25 keyword retrieval with hybrid strategy
+5. Rank and retrieve questions to generate high-quality QA pairs
 
-本项目在预处理的PDF转Markdown环境整合MinerU,因此请移步[MinerU](https://github.com/opendatalab/MinerU)， 先完成MinierU的安装,切记在同一个虚拟环境下。
+## Quick Start
 
-#### 安装依赖
+⚠️ **Note**: This project requires GPU acceleration. Smooth operation requires at least **8GB** of VRAM!
 
-```bash
-    pip install -r requirements.txt
-```
-
-#### 模型下载
+### Clone Repository
 
 ```bash
-    modelscope download --model BAAI/bge-m3 --local_dir ./dir
-    modelscope download --model BAAI/bge-reranker-large --local_dir ./dir
+git clone https://github.com/Fakerfigure/QAG_System.git
+cd QAG_System
 ```
 
-下载好模型后，需要手动将模型文件添加在 `Jsonfile/em_model_config.json` 中，假设路径为`bin/QAG_System/modelscope/BAAI/bge-m3`,则文件修改为：
+### Conda Virtual Environment (Optional)
+
+```bash
+conda create -n QAG_System python=3.10
+conda activate QAG_System
+```
+
+### Install [MinerU](https://github.com/opendatalab/MinerU)
+
+This project integrates MinerU for PDF-to-Markdown conversion. Please visit [MinerU](https://github.com/opendatalab/MinerU) to complete the installation first, ensuring it's in the same virtual environment.
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Download Models
+
+```bash
+modelscope download --model BAAI/bge-m3 --local_dir ./dir
+modelscope download --model BAAI/bge-reranker-large --local_dir ./dir
+```
+
+After downloading, manually add the model paths to `Jsonfile/em_model_config.json`. For example, if the path is `bin/QAG_System/modelscope/BAAI/bge-m3`:
 
 ```json
-    {
-        "model_paths": {
+{
+    "model_paths": {
         "embedding_model": "bin/QAG_System/modelscope/BAAI/bge-m3",
         "reranker_model": "bin/QAG_System/modelscope/BAAI/bge-reranker-large"
-        }
     }
+}
 ```
 
-#### 启动  
-
-```python
-    streamlit run QAG_System_app.py
-```
-
-启动成功后，若浏览器没有自动弹出，则手动访问`http://localhost:8501`。
-
-### 页面介绍
-
-#### 页面结构
+### Launch
 
 ```bash
-    QAG_System/
-    ├── pages/
-    │   ├── Preprocessing.py
-    │   ├── QA_management.py
-    │   ├── DB_management.py
-    │   └── Model_management.py
-    └── QAG_System_app.py
+streamlit run QAG_System_app.py
 ```
 
-基于streamlit的前端架构要求，所有页面都需要在`QAG_System_app.py`中进行注册，`QAG_System_app.py`中主要完成了系统的初始化和页面的调用以及导航栏的配置，其他页面都在`pages`目录下统一管理，每一个页面都是一个单独的`python`文件，页面的功能和设计都在各自的文件中进行编写。
+After successful startup, if the browser doesn't open automatically, manually visit `http://localhost:8501`.
 
-#### 文献处理页
+## Page Guide
 
-文献处理页主要包含文件的上传与解析，对文件进行预处理例如PDF转markdown、提取标题、摘要、介绍、结论等，并将处理后的文件存储到指定目录，此外该环节需要利用大模型提取实体并产生问题，其界面如图所示，文件成功上传后，`st.dataframe`会读取元数据的内容并呈现在表格中，表格支持多行选中操作。
+### Page Structure
 
-![文献处理](images/Preprocessing.png)
+```
+QAG_System/
+├── pages/
+│   ├── Preprocessing.py
+│   ├── QA_management.py
+│   ├── DB_management.py
+│   └── Model_management.py
+└── QAG_System_app.py
+```
 
-- 文件上传
-  用户可以点击或拖动上传论文文件（限定PDF格式），系统会为该文件创建元数据，以2405.09939v2.pdf文件为例，当其正确上传后其元数据为：
+Based on Streamlit's frontend architecture requirements, all pages need to be registered in `QAG_System_app.py`, which handles system initialization, page invocation, and navigation configuration. Other pages are managed in the `pages` directory.
+
+### Document Processing Page
+
+The Document Processing page handles file upload and parsing, preprocessing (PDF to Markdown), extraction of title, abstract, introduction, and conclusion. It also uses LLM for entity extraction and question generation.
+
+![Document Processing](images/Preprocessing.png)
+
+**File Upload**
+
+Users can click or drag to upload paper files (PDF format only). The system creates metadata for each file. For example, when `2405.09939v2.pdf` is uploaded:
 
 ```json
-    {
-        "标题": "2405.09939v2.pdf", 
-        "上传时间": "2025-04-23 15:51:01", 
-        "大小": "1.08 MB", "状态": "已上传", 
-        "存储路径": "PDF/20250423155101_2405.09939v2.pdf", 
-        "md路径": "", 
-        "向量库路径": "", 
-        "实体数量": 0, 
-        "实体": [], 
-        "Chunks地址": "", 
-        "QA_result": []
-    }
+{
+    "title": "2405.09939v2.pdf",
+    "upload_time": "2025-04-23 15:51:01",
+    "size": "1.08 MB",
+    "status": "uploaded",
+    "storage_path": "PDF/20250423155101_2405.09939v2.pdf",
+    "md_path": "",
+    "vector_db_path": "",
+    "entity_count": 0,
+    "entities": [],
+    "chunks_path": "",
+    "QA_result": []
+}
 ```
 
-- 预处理
+**Preprocessing**
 
-当用户选定一行或多行文件后（无选中数据会出发警告），点击“预处理”按钮，系统会自动将选定的文件转换为markdown格式，将markdwon存储在制定目录下，并更新元数据信息，如下图所示。
+After selecting one or more files, click the "Preprocess" button to convert selected files to Markdown format.
 
-![预处理](images/yuchuli.png)
+![Preprocessing](images/yuchuli.png)
 
-转换成功后，更新“状态”为“已转换”，更新“md路径”为转换后的markdown文件存储路径，元数据如下：
+**Markdown Preview & Edit**
 
-```json
-    {
-        "标题": "2405.09939v2.pdf", 
-        "上传时间": "2025-04-23 15:51:01", 
-        "大小": "1.08 MB", 
-        "状态": "已转换", 
-        "存储路径": "PDF/20250423155101_2405.09939v2.pdf", 
-        "md路径": "Markdown/2405.09939v2.md", 
-        "向量库路径": "", 
-        "实体数量": 0,
-        "实体": [],
-        "QA_result": [], 
-        "Chunks地址": ""
-    }
-```
+Preprocessed documents support Markdown viewing and editing. Select a file and click "Preview Selected File" to enter the preview interface.
 
-- Markdown预览与修改：
+![Markdown Preview](images/markdown_edit.png)
 
-经过预处理的文档支持查看markdown，并修改markdown,选中需要查看的数据（仅支持单条），在列表下方会出现“预览选中文件”，点击进入预览界面，可以对照PDF源文件查看并修改markdown，修改完成后点击“保存修改”，系统会自动将修改后的markdown文件存储到指定目录下,如下图所示。
+**Entity Extraction**
 
-![markdown预览](images/markdown_edit.png)
+Select preprocessed files and click "Extract Entities" to generate entities. The system extracts abstract, introduction, and conclusion sections, then uses LLM for entity extraction.
 
-- 提取实体：
+**Question Generation**
 
-选择经过预处理的文件可以通过点击“提取实体”按钮来生成实体，首先系统会利用正则的方式提取md文件中abstract、instructions、conclusion等部分，然后利用大模型进行实体抽取，将实体存储在元数据中，该过程可以批量进行。
+Select documents with extracted entities and click "Generate Questions". The system generates 10 scientific questions around the entities.
 
-抽取实体后，更新“实体数量”为抽取出的实体数量，更新“实体”为抽取出的实体列表，此外用户也可以在列表中预览实体，默认抽取实体数量为15，元数据如下：
+**Text Embedding**
 
-```json
-    {
-        "标题": "2405.09939v2.pdf", 
-        "上传时间": "2025-04-23 15:51:01", 
-        "大小": "1.08 MB", 
-        "状态": "已抽取实体", 
-        "存储路径": "PDF/20250423155101_2405.09939v2.pdf", 
-        "md路径": "Markdown/2405.09939v2.md", 
-        "向量库路径": "", 
-        "实体数量": 15, 
-        "实体": [
-            "SciQAG", 
-            "large language models (LLMs)", 
-            "QA generator", 
-            "QA evaluator",  
-            ... ，
-            "Med-PALM", 
-            "Galactica"
-        ], 
-        "QA_result": [], 
-        "Chunks地址": ""
-    }
-```
+Select converted documents and click "Text Embedding". The system splits Markdown documents and converts them to vectors stored locally.
 
-- 生成问题
+### QA Management Page
 
-选中完成抽取实体文档可以进行问题生成，点击“问题生成”按钮，系统将会利用大模型生成10个围绕“实体”的科学问题，并将其存储在元数据中，生成问题后，状态会更新为“已生成问题”，问题会以列表的形式存放在“QA_result”值中，元数据（有省略）如下：
+This stage completes answer generation based on Mini_RAG, QA management and editing, and preliminary dataset creation.
 
-```json
-    {
-        "标题": "2405.09939v2.pdf",
-        "上传时间": "2025-04-23 15:51:01",
-        "大小": "1.08 MB",
-        "状态": "已生问题",
-        "存储路径": "PDF/20250423155101_2405.09939v2.pdf",
-        "md路径": "Markdown/2405.09939v2.md",
-        "向量库路径": "",
-        "实体数量": 15,
-        "实体": [
-            "SciQAG",
-            "large language models (LLMs)",
-            ...,
-            "Galactica"
-        ],
-        "QA_result": [
-            {
-            "question": "Describe the structure ... QA dataset",
-            "answer": "",
-            "reference": ""
-            }
-        ]...,
-        "Chunks地址": ""
-    }
-```
+![QA Management](images/qa_manage.png)
+
+**Generate Answers**
+
+Select questions to generate answers and click "Generate Answers". The system calls the Mini_RAG framework to generate answers.
+
+**QA Editing**
+
+Select a QA pair to edit. Users can freely adjust questions and answers (except references).
+
+![QA Editing](images/qa_edit.png)
+
+**Create Dataset**
+
+Select QAs to create a dataset, click "Create Dataset", enter a dataset name, and the system will extract selected QAs to generate a dataset file.
+
+![Create Dataset](images/DBG.png)
+
+### Dataset Management Page
+
+This page handles dataset management, editing, export, and download.
+
+![Dataset Management](images/DBM.png)
+
+### Model Management Page
+
+The Model Management page provides global management of LLMs used in the project.
+
+![Model Management](images/MM.png)
+
+The system only supports OpenAI-compatible interfaces. Users can configure API key, model URL, temperature, and other parameters.
+
+## Evaluation
+
+The system includes 5 evaluation dimensions: Relevance, Unawareness, Completeness, Accuracy, and Rationality.
+
+See [eval/readme.md](eval/readme.md) for detailed evaluation results and prompts.
 
 
-- 文本嵌入
-
-选择经过转换的文档，点击“文本嵌入”按钮，系统会将markddown文档进行切分并转换成向量存储在本地，每个文档生成自己独立的向量库。完成文本嵌入后，状态会更新为“已嵌入”，向量库路径会更新为向量库的存储路径，所有的向量会独立存放在本地vector_db文件夹内，并根据论文文件名的哈希值进行命名。
-
-- 文献删除
-
-选中需要删除的文件，点击“删除”按钮，系统会删除掉该文件对应的元数据，并删除该文件对应的markdown文件，向量库文件，以及该文件对应的pdf文件，该过程不可逆，且会影响到QA管理页的内容。
-
-#### QA管理页
-
-该环节主要完成基于Mini_RAG的答案生成,QA管理与编辑，以及完成初步的数据集创建，当在文献处理页完成“生成问题”和“文本嵌入”后，QA管理页如下图所示。
-
-![QA管理页](images/qa_manage.png)
-
-在QA管理页中，每篇文献会独立生成一个QA管理子页面（单独列表），未生成QA的论文会提示“尚未生QA”。
-
-- 生成答案
-
-选中需要生成答案的问题，点击“生成答案”按钮，系统会调取后台Mini_RAG框架来生成答案。
-完成答案生成后，系统会将答案和参考更新在元数据中，列表会触发读取机制，将更新后的QA数据呈现在页面中，由于RAG检索召回环节和答案生成为两个过程，因此，即使LLM因为一些原因输出有误，用户还可以通过查看参考文献自行填写答案。
-
-- QA编辑
-
-选中需要编辑的一组QA,在该论文列表下方会出现“双击编辑选中QA”按钮，双击后会进入QA编辑页，在该子页中，用户可以自由调整除参考文献以外的问题和答案，如下图所示。
-
-![QA编辑](images/qa_edit.png)
-
-- QA删除
-
-选中需要删除的QA,点击“删除”按钮，系统会删除该QA（问题、答案、参考文献）并更新元数据。
-
-- 创建数据集
-
-选择需要创建数据集的QA，点击“创建数据集”按钮，系统会弹出创建数据集的窗口，用户可以输入数据集名称，并点击“创建”按钮，系统会将选中QA（不含参考文献）从元数据中提取出来，在本地DataBase_manage目录下生成数据集文件，创建过程如下图所示。
-
-![create_dataset](images/DBG.png)
-
-### 数据集管理页
-
-该页面主要完成数据集的管理与编辑，数据集的导出与下载，其页面如下图所示。
-
-![dataset_manage](images/DBM.png)
-
-在数据集管理页中，系统会自动读取在DataBase_manage目录下的数据集文件，每个数据集单独形成列表，用户通过列表管理数据集，在侧边栏可以配置数据集的导出细则，导出文件支持json，jsonl，csv，配置完成导出细则后，右边“导出数据集”按钮会变成“下载数据集”按钮。
-
-### 模型管理页
-
-QAG_System每个页面或多或少都使用到了LLM，而LLM通常调取API进行使用，配置一个适合自身项目的大模型需要仔细配置API,并通过充分的测试，为了用户方便配置和测试模型，本系统提供一个模型管理页来对项目使用的LLM进行全局管理，其页面如下。
-
-![model_manage_page](images/MM.png)
-
-本系统仅支持类OpenAI式接口，用户可以根据自己的需求自行配置接口参数如密钥、模型url、模型
-温度系数等参数，配置完成后点击“保存配置”，系统会将参数存储为结构化数据，我们为系统定制了统一的chatbot库，各页面通过调用该库来读取模型配置，完成全局模型统一，此外，配置好的模型可以在下方进行LLM测试，测试栏会实时返回模型输出和消耗的token数量并标注当前模型以及相关参数，方便用户进行模型调试。
