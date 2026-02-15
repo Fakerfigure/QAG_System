@@ -1,0 +1,9 @@
+{
+    "api_key": "sk-c577fd2f34ed4a828b5d6ce320c8fdde",
+    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "model": "qwen-plus",
+    "temperature": 0.3,
+    "input_pdf": "/home/binbin/Desktop/dataset/QAG/论文/论文收集-new/MIS_Quarterly_MISQ/Guo-ModelCompetitionPerpetual-2018.pdf",
+    "embedding_model": "/home/binbin/deeplearning/MinerU/bge-m3",
+    "reranker_model": "/home/binbin/deeplearning/MinerU/bge-reranker-large"
+}

@@ -16,11 +16,12 @@
 - [Core Technology - Mini_RAG](#core-technology---mini_rag)
 - [Quick Start](#quick-start)
 - [Page Guide](#page-guide)
+- [End-to-End Pipeline (CLI)](#end-to-end-pipeline-cli)
 - [Evaluation](#evaluation)
 
 ## Architecture
 
-![Architecture](images/qag_system.png)
+![Architecture](images/qag_system_en.png)
 
 The system workflow from paper to QA consists of four key stages:
 
@@ -204,6 +205,40 @@ The Model Management page provides global management of LLMs used in the project
 ![Model Management](images/MM.png)
 
 The system only supports OpenAI-compatible interfaces. Users can configure API key, model URL, temperature, and other parameters.
+
+## End-to-End Pipeline (CLI)
+
+For developers who prefer command-line tools over WebUI, we provide an end-to-end QAG pipeline script that processes a single PDF through the complete workflow.
+
+### Features
+
+- **Complete Pipeline**: PDF → Markdown → Entity Extraction → Question Generation → Answer Generation (Mini_RAG)
+- **Performance Metrics**: Records duration, token usage, and GPU memory for each stage
+- **Standalone Config**: Independent configuration file for API keys and model paths
+- **Alpaca Format Output**: Generates training-ready QA pairs in Alpaca format
+
+### Usage
+
+```bash
+cd e2e_QAG
+
+# Edit config.json with your settings
+# - api_key: Your LLM API key
+# - input_pdf: Path to your PDF file
+# - embedding_model / reranker_model: Model paths
+
+python e2e_QAG.py
+```
+
+### Output
+
+After execution, check the `output/` directory:
+- `markdown/` - Converted Markdown files
+- `vector_db/` - Vector database for RAG
+- `report.md` - Detailed benchmark report with metrics
+- `report_alpaca.jsonl` - QA pairs in Alpaca format
+
+📊 **[View Sample Report](e2e_QAG/output/report.md)** - See an example benchmark report with 10 QA pairs generated from a research paper.
 
 ## Evaluation
 

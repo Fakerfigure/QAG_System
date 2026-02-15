@@ -16,6 +16,7 @@
 - [核心技术-Mini_RAG](#核心技术-mini_rag)
 - [快速开始](#快速开始)
 - [页面介绍](#页面介绍)
+- [端到端流水线 (命令行)](#端到端流水线-命令行)
 - [评估体系](#评估体系)
 
 ## 项目架构
@@ -176,6 +177,40 @@ QAG_System每个页面或多或少都使用到了LLM，本系统提供一个模�
 ![model_manage_page](images/MM.png)
 
 本系统仅支持类OpenAI式接口，用户可以根据自己的需求自行配置接口参数。
+
+## 端到端流水线 (命令行)
+
+如果您更喜欢命令行工具而非 WebUI，我们提供了一个端到端 QAG 流水线脚本，可以将单个 PDF 文件完整处理为 QA 数据集。
+
+### 功能特点
+
+- **完整流水线**：PDF → Markdown → 实体提取 → 问题生成 → 答案生成 (Mini_RAG)
+- **性能指标**：记录每个阶段的耗时、Token 消耗和 GPU 显存占用
+- **独立配置**：独立的配置文件，可单独设置 API 密钥和模型路径
+- **Alpaca 格式输出**：生成可直接用于训练的 Alpaca 格式 QA 数据
+
+### 使用方法
+
+```bash
+cd e2e_QAG
+
+# 编辑 config.json 配置文件
+# - api_key: 您的 LLM API 密钥
+# - input_pdf: PDF 文件路径
+# - embedding_model / reranker_model: 模型路径
+
+python e2e_QAG.py
+```
+
+### 输出结果
+
+执行完成后，查看 `output/` 目录：
+- `markdown/` - 转换后的 Markdown 文件
+- `vector_db/` - RAG 向量数据库
+- `report.md` - 详细的性能报告，包含各阶段指标
+- `report_alpaca.jsonl` - Alpaca 格式的 QA 数据
+
+📊 **[查看示例报告](e2e_QAG/output/report.md)** - 包含从一篇研究论文生成的 10 个 QA 对的完整性能报告。
 
 ## 评估体系
 
